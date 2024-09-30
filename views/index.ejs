@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify Clone</title>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            display: flex;
+            flex-direction: row;
+            height: 100vh;
+        }
+        .sidebar {
+            width: 250px;
+            background-color: #040404;
+            padding: 20px;
+        }
+        .sidebar h2 {
+            font-size: 1.5rem;
+            color: #fff;
+            margin-bottom: 20px;
+        }
+        .sidebar ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        .sidebar ul li {
+            margin: 15px 0;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: color 0.3s ease;
+        }
+        .sidebar ul li:hover {
+            color: #1DB954;
+        }
+        .sidebar ul li button {
+            background-color: #f44336;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 5px;
+            margin-left: 10px;
+        }
+        .content {
+            flex: 1;
+            background-color: #181818;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .content h2 {
+            font-size: 1.8rem;
+            color: #fff;
+            margin-bottom: 20px;
+        }
+        .content h2 a {
+            color: #1DB954;
+            text-decoration: none;
+        }
+        .content h2 a:hover {
+            text-decoration: underline;
+        }
+        .song-list {
+            margin-top: 20px;
+            list-style-type: none;
+            padding: 0;
+        }
+        .song-list li {
+            margin: 15px 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: background-color 0.3s ease;
+        }
+        .song-list li:hover {
+            background-color: #282828;
+            padding: 5px;
+            border-radius: 4px;
+        }
+        .song-list li a {
+            color: #fff;
+            text-decoration: none;
+        }
+        .song-list li a:hover {
+            color: #1DB954;
+        }
+        .player {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #282828;
+            padding: 15px 0;
+            text-align: center;
+        }
+        .player audio {
+            width: 80%;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #1DB954;
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #14833b;
+        }
+        input {
+            padding: 10px;
+            width: 100%;
+            margin-top: 10px;
+            background-color: #333333;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        input::placeholder {
+            color: #b3b3b3;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Sidebar (Playlists Section) -->
+        <div class="sidebar">
+            <h2>Playlists</h2>
+            <ul id="playlist">
+                <!-- Playlists will be added here -->
+            </ul>
+            <input type="text" id="playlistName" placeholder="New Playlist Name">
+            <button onclick="addPlaylist()">Add Playlist</button>
+        </div>
+
+        <!-- Content Section (Song List) -->
+        <div class="content">
+            <h2><a href="#" onclick="window.location.reload()">Home</a></h2>
+            <h2 id="playlistname">All Songs</h2>
+            <ul class="song-list" id="songs">
+                <li><input type="checkbox" name="song" value="song1"/><a onclick="playSong('song1.mp3')">Song 1 - Artist 1</a></li>
+                <li><input type="checkbox" name="song" value="song2"/><a onclick="playSong('song2.mp3')">Song 2 - Artist 1</a></li>
+                <li><input type="checkbox" name="song" value="song3"/><a onclick="playSong('song3.mp3')">Song 3 - Artist 1</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Music Player -->
+    <div class="player">
+        <audio id="audioPlayer" controls>
+            <source id="audioSource" src="https://www.youtube.com/watch?v=ft9NRmYXQHM" type="audio/mp3">
+            Your browser does not support the audio element.
+        </audio>
+    </div>
+
+    <script>
+        // Function to play a selected song
+        function playSong(song) {
+            var audioPlayer = document.getElementById('audioPlayer');
+            var audioSource = document.getElementById('audioSource');
+            audioSource.src = 'music/' + song;
+            audioPlayer.load();
+            audioPlayer.play();
+        }
+
+        function displaySongList(dItem) {
+            const { name = "", songs = "" } = dItem;
+            const data = songs.split(",");
+            const playlistname = document.getElementById('playlistname');
+            playlistname.textContent = name + "'s Playlist";
+            const songlist = document.getElementById('songs');
+            songlist.innerHTML = ''; // Clear existing content
+
+            // Loop through the playlist data and create list items
+            data.forEach(item => {
+                var li = document.createElement('li');
+                var a = document.createElement('a');
+
+                a.textContent = item;
+                a.href = "#";
+
+                a.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    playSong(item + ".mp3");
+                });
+
+                // Add delete button to each playlist item
+                li.appendChild(a);
+                songlist.appendChild(li);
+            });
+        }
+       
+
+        function deletePlaylist(id) {
+            fetch(`/playlist/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+            });
+        }
+
+        // Function to add a new playlist
+        function addPlaylist() {
+            var playlistName = document.getElementById('playlistName').value;
+
+            const selectedItems = [];
+            const checkboxes = document.querySelectorAll('input[name="song"]:checked');
+
+            checkboxes.forEach((checkbox) => {
+                selectedItems.push(checkbox.value);
+            });
+
+            // Create the POST request
+            fetch('/playlist', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ name: playlistName, songs: selectedItems.join(",") })
+            })
+                .then(response => response.json())
+                .then(() => {
+                    fetchPlaylists();
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                });
+        }
+
+        function fetchPlaylists() {
+            fetch('/playlist')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const playlist = document.getElementById('playlist');
+                    playlist.innerHTML = ''; // Clear existing content
+
+                    // Loop through the playlist data and create list items
+                    data.forEach(item => {
+                        var li = document.createElement('li');
+                        var a = document.createElement('a');
+
+                        a.textContent = item.name;
+                        a.href = "#";
+
+                        a.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            displaySongList(item);
+                        });
+                        
+
+                        // Add delete button to each playlist item
+                        var deleteBtn = document.createElement('button');
+                        deleteBtn.textContent = 'Delete';
+                        deleteBtn.onclick = function() {
+                            deletePlaylist(item.id);
+                            playlist.removeChild(li);
+                        };
+                        li.appendChild(a);
+                        li.appendChild(deleteBtn);
+                        playlist.appendChild(li);
+                        document.getElementById('playlistName').value = '';
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching playlists:', error);
+                });
+        }
+
+        // Call the function to fetch playlists when the window loads
+        window.onload = fetchPlaylists;
+    </script>
+</body>
+</html>
